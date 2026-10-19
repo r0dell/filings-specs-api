@@ -93,7 +93,7 @@ SYM = S("Futures symbol, e.g. ES, MES, NQ, MNQ, YM, RTY, CL, MCL, NG, GC, MGC, S
         "6S, BTC, MBT, ZC, ZS, ZW, VX, FDAX, FDXM, FDXS, FESX, FSMI, FGBL, FGBM, FGBS")
 
 # Preis A16: 0.0010 USDC
-A16 = "$0.001"
+A16 = "$0.01"
 routes = {
     "GET /v1/spec": route(
         A16, "Returns the contract specification of a futures symbol (CME, CBOT, NYMEX, COMEX, Cboe, Eurex): "
