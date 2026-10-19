@@ -9,7 +9,7 @@ Umgebungsvariablen:
 
 Start:  uvicorn paid_app:app --host 0.0.0.0 --port 8000
 Gratis:  /v1/symbols, /v1/sources, /health, /docs
-Bezahlt: /v1/filings, /v1/insider (A9), /v1/spec, /v1/tick-value, /v1/position-size (A16)
+Bezahlt: /v1/spec, /v1/tick-value, /v1/position-size (A16)
 """
 import os
 import re
@@ -92,28 +92,9 @@ S = lambda d: {"type": "string", "description": d}
 SYM = S("Futures symbol, e.g. ES, MES, NQ, MNQ, YM, RTY, CL, MCL, NG, GC, MGC, SI, HG, ZT, ZF, ZN, ZB, 6E, 6J, 6B, "
         "6S, BTC, MBT, ZC, ZS, ZW, VX, FDAX, FDXM, FDXS, FESX, FSMI, FGBL, FGBM, FGBS")
 
-# Preise je Agent: A9 0.0020, A16 0.0010 USDC
-A9, A16 = "$0.002", "$0.001"
+# Preis A16: 0.0010 USDC
+A16 = "$0.001"
 routes = {
-    "GET /v1/filings": route(
-        A9, "Returns the latest SEC EDGAR filings of a US-listed company by ticker (8-K with item titles, 10-Q, "
-            "10-K, Form 4, S-1, 13D/G and more) with filing date, acceptance time and direct document links.",
-        ["finance", "sec", "filings", "edgar", "stocks"], {"ticker": "AAPL", "type": "8-K"},
-        {"ticker": S("US stock ticker, e.g. AAPL"), "type": S("Optional form filter, e.g. 8-K, 10-Q, 10-K, 4; "
-                                                                "comma list allowed"),
-         "limit": S("Number of filings, 1-100. Default 20.")}, ["ticker"],
-        {"ticker": "AAPL", "filings": [{"form": "8-K", "filing_date": "2026-10-30",
-                                        "items": [{"item": "2.02", "title": "Results of Operations and "
-                                                                           "Financial Condition"}]}]}),
-    "GET /v1/insider": route(
-        A9, "Returns recent Form 4 insider transactions of a US company by ticker, parsed: insider name and role, "
-            "transaction code (purchase, sale, award, exercise), shares, price, value and holdings after, plus a "
-            "purchase/sale summary.",
-        ["finance", "sec", "insider", "form4", "stocks"], {"ticker": "NVDA"},
-        {"ticker": S("US stock ticker"), "limit": S("Number of Form 4 filings, 1-20. Default 10.")}, ["ticker"],
-        {"ticker": "NVDA", "summary": {"open_market_sales_value": 1250000.0},
-         "form4_filings": [{"owners": [{"name": "Doe John", "roles": ["officer", "CFO"]}],
-                            "transactions": [{"code": "S", "shares": 10000, "price": 125.0}]}]}),
     "GET /v1/spec": route(
         A16, "Returns the contract specification of a futures symbol (CME, CBOT, NYMEX, COMEX, Cboe, Eurex): "
              "multiplier, tick size, tick value, point value, currency and trading hours.",

@@ -1,4 +1,4 @@
-"""HTTP-API: Filings & Specs API (SEC-Meldungen nach Ticker, Insider-Transaktionen, Kontrakt-Spezifikationen)."""
+"""HTTP-API: Filings & Specs API (Kontrakt-Spezifikationen, Tickwert, Positionsgrösse)."""
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query
@@ -8,9 +8,8 @@ import engine as e
 app = FastAPI(
     title="Filings & Specs API",
     version="0.1.0",
-    description=("Latest SEC filings (8-K with item titles, 10-Q, 10-K, Form 4 and more) for a US ticker with "
-                 "direct links, parsed Form 4 insider transactions, and futures contract specifications with tick "
-                 "values and position sizing for CME, Cboe and Eurex products."),
+    description=("Futures contract specifications with tick values and position sizing for CME, CBOT, NYMEX, "
+                 "COMEX, Cboe and Eurex products."),
 )
 
 
@@ -19,22 +18,8 @@ def _run(fn, *args):
         return fn(*args)
     except KeyError as ex:
         raise HTTPException(status_code=404, detail=str(ex).strip("'\""))
-    except e.SourceUnavailable as ex:
-        raise HTTPException(status_code=503, detail=str(ex))
     except ValueError as ex:
         raise HTTPException(status_code=400, detail=str(ex))
-
-
-# ---------------------------------------------------------------- A9
-@app.get("/v1/filings", summary="Latest SEC filings of a US ticker (optionally filtered by form type)")
-def filings(ticker: str = Query(..., examples=["AAPL"]), type: Optional[str] = Query(None, examples=["8-K"]),
-            limit: int = Query(20, ge=1, le=100)):
-    return _run(e.filings, ticker, type, limit)
-
-
-@app.get("/v1/insider", summary="Parsed Form 4 insider transactions of a US ticker")
-def insider(ticker: str = Query(..., examples=["NVDA"]), limit: int = Query(10, ge=1, le=20)):
-    return _run(e.insider, ticker, limit)
 
 
 # ---------------------------------------------------------------- A16
@@ -62,16 +47,9 @@ def symbols():
 
 
 @app.get("/v1/sources", summary="Data source status (free)")
-def sources(check: bool = False):
-    latest = {}
-    if check:
-        try:
-            r = e.filings("AAPL", None, 1)
-            latest["sec_aapl_latest_filing"] = r["filings"][0]["filing_date"] if r["filings"] else None
-        except Exception as ex:
-            latest["sec_aapl_latest_filing"] = f"error: {ex}"[:200]
+def sources():
     from specs import VERIFIED
-    return {"specs_verified": VERIFIED, "latest": latest, "status": e.status()}
+    return {"specs_verified": VERIFIED, "symbols": len(e.symbols())}
 
 
 @app.get("/health", include_in_schema=False)
